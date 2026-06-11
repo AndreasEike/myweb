@@ -40,4 +40,7 @@ app.MapControllers();
 
 app.MapGet("/api/health", () => new { status = "ok" });
 
+app.MapPost("/api/auth/register", async (RegisterRequest request, AuthService authService) =>
+    await authService.RegisterAsync(request));
+
 app.Run();
