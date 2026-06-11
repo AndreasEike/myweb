@@ -26,3 +26,30 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# .NET / C# specific
+bin/
+obj/
+/.vs/
+*.dll
+*.exe
+*.so
+*.dylib
+*.user
+*.suo
+*.sln.docstates
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# User secrets
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+.claude/
+MEMORY.md
