@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using myweb.api.Data;
 using myweb.api.Models;
 
@@ -6,10 +7,12 @@ namespace myweb.api.Services;
 public class AuthService
 {
     private readonly AppDbContext _context;
+    private readonly TokenService _tokenService;
 
-    public AuthService(AppDbContext context)
+    public AuthService(AppDbContext context, TokenService tokenService)
     {
         _context = context;
+        _tokenService = tokenService;
     }
 
     public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -20,18 +23,18 @@ public class AuthService
             {
                 Email = request.Email ?? string.Empty,
                 Success = false,
-                Message = "Email and password are required"
+                Message = "E-post og passord er påkrevd"
             };
         }
 
-        var existingUser = _context.Users.FirstOrDefault(u => u.Email == request.Email);
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (existingUser != null)
         {
             return new RegisterResponse
             {
                 Email = request.Email,
                 Success = false,
-                Message = "Email already registered"
+                Message = "E-posten er allerede registrert"
             };
         }
 
@@ -39,7 +42,8 @@ public class AuthService
         var user = new User
         {
             Email = request.Email,
-            PasswordHash = hashedPassword
+            PasswordHash = hashedPassword,
+            Role = UserRoles.User
         };
 
         _context.Users.Add(user);
@@ -50,7 +54,28 @@ public class AuthService
             Id = user.Id,
             Email = user.Email,
             Success = true,
-            Message = "User registered successfully"
+            Message = "Bruker registrert"
+        };
+    }
+
+    public async Task<LoginResponse?> LoginAsync(LoginRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return null;
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            return null;
+        }
+
+        return new LoginResponse
+        {
+            Token = _tokenService.CreateToken(user),
+            Email = user.Email,
+            Role = user.Role
         };
     }
 }
