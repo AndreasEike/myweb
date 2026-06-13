@@ -1,0 +1,134 @@
+<a routerLink="/kamper" class="text-sm text-emerald-700 hover:underline">← Tilbake til kampene</a>
+
+@if (error(); as message) {
+  <p class="mt-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{{ message }}</p>
+}
+
+@if (quiz(); as q) {
+  <div class="mt-2 mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">{{ q.homeTeam }} – {{ q.awayTeam }}</h1>
+    <p class="text-sm text-slate-500">
+      Avspark {{ q.kickoffUtc | date: 'EEEE d. MMMM HH:mm' }}
+      @if (!q.isLocked) {
+        · Svarfrist {{ q.lockAtUtc | date: 'HH:mm' }}
+      }
+    </p>
+
+    @if (q.hasAnswerKey) {
+      <p class="mt-3 inline-block rounded-lg bg-emerald-100 px-4 py-2 font-semibold text-emerald-900">
+        Du fikk {{ q.myPoints ?? 0 }} av {{ q.questions.length }} poeng 🏆
+      </p>
+    } @else if (q.isLocked) {
+      <p class="mt-3 inline-block rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900">
+        Fristen er ute – svarene er låst. Resultatene kommer etter kampen.
+      </p>
+    }
+  </div>
+
+  <div class="space-y-3">
+    @for (question of q.questions; track question.matchQuestionId) {
+      <div class="rounded-xl bg-white p-4 shadow-sm"
+           [class.ring-2]="q.hasAnswerKey"
+           [class.ring-emerald-300]="q.hasAnswerKey && question.isCorrect === true"
+           [class.ring-red-200]="q.hasAnswerKey && question.isCorrect !== true">
+        <div class="mb-2 flex items-start justify-between gap-2">
+          <p class="font-medium text-slate-800">
+            <span class="mr-1 text-slate-400">{{ question.orderIndex }}.</span>{{ question.text }}
+          </p>
+          @if (q.hasAnswerKey) {
+            @if (question.isCorrect === true) {
+              <span class="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">✓ 1 poeng</span>
+            } @else {
+              <span class="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">✗ 0 poeng</span>
+            }
+          }
+        </div>
+
+        @switch (question.type) {
+          @case ('yesNo') {
+            <div class="flex gap-2">
+              <button type="button" (click)="setAnswer(question, 'yes')" [disabled]="q.isLocked"
+                      class="rounded px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed"
+                      [class]="answerOf(question) === 'yes'
+                        ? 'bg-emerald-700 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+                Ja
+              </button>
+              <button type="button" (click)="setAnswer(question, 'no')" [disabled]="q.isLocked"
+                      class="rounded px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed"
+                      [class]="answerOf(question) === 'no'
+                        ? 'bg-emerald-700 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+                Nei
+              </button>
+            </div>
+          }
+          @case ('teamPick') {
+            <div class="flex flex-wrap gap-2">
+              <button type="button" (click)="setAnswer(question, 'home')" [disabled]="q.isLocked"
+                      class="rounded px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed"
+                      [class]="answerOf(question) === 'home'
+                        ? 'bg-emerald-700 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+                {{ q.homeTeam }}
+              </button>
+              <button type="button" (click)="setAnswer(question, 'away')" [disabled]="q.isLocked"
+                      class="rounded px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed"
+                      [class]="answerOf(question) === 'away'
+                        ? 'bg-emerald-700 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+                {{ q.awayTeam }}
+              </button>
+            </div>
+          }
+          @case ('scoreGuess') {
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-slate-600">{{ q.homeTeam }}</label>
+              <input type="text" inputmode="numeric" maxlength="2" [disabled]="q.isLocked"
+                     [value]="scorePart(question, 0)"
+                     (input)="setScorePart(question, 0, $any($event.target))"
+                     class="w-14 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none disabled:bg-slate-100" />
+              <span class="font-semibold text-slate-400">–</span>
+              <input type="text" inputmode="numeric" maxlength="2" [disabled]="q.isLocked"
+                     [value]="scorePart(question, 1)"
+                     (input)="setScorePart(question, 1, $any($event.target))"
+                     class="w-14 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none disabled:bg-slate-100" />
+              <label class="text-sm text-slate-600">{{ q.awayTeam }}</label>
+            </div>
+          }
+          @case ('number') {
+            <input type="text" inputmode="numeric" maxlength="3" [disabled]="q.isLocked"
+                   placeholder="Antall"
+                   [value]="answerOf(question)"
+                   (input)="setNumber(question, $any($event.target))"
+                   class="w-24 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none disabled:bg-slate-100" />
+          }
+        }
+
+        @if (q.hasAnswerKey) {
+          <p class="mt-2 text-sm text-slate-600">
+            Ditt svar: <span class="font-medium">{{ formatAnswer(question, question.myAnswer) }}</span>
+            · Riktig svar: <span class="font-medium">{{ formatAnswer(question, question.correctAnswer) }}</span>
+          </p>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!q.isLocked) {
+    <div class="sticky bottom-0 mt-6 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+      <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+        <span class="text-sm text-slate-600">
+          {{ validCount() }} av {{ q.questions.length }} besvart
+          @if (saved()) {
+            <span class="ml-2 font-medium text-emerald-700">✓ Lagret</span>
+          }
+        </span>
+        <button type="button" (click)="save()" [disabled]="busy()"
+                class="rounded bg-emerald-700 px-6 py-2 font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">
+          {{ busy() ? 'Lagrer…' : 'Lagre svar' }}
+        </button>
+      </div>
+    </div>
+  }
+}

@@ -1,0 +1,75 @@
+<h1 class="mb-4 text-2xl font-bold text-slate-800">Kamper</h1>
+
+@if (error(); as message) {
+  <p class="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{{ message }}</p>
+}
+
+@if (matches(); as list) {
+  @if (list.length === 0) {
+    <p class="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+      Ingen quizer er klare ennå. Kom tilbake senere!
+    </p>
+  }
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    @for (match of list; track match.id) {
+      <div class="rounded-xl bg-white p-5 shadow-sm">
+        <div class="mb-1 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-800">
+            {{ match.homeTeam }} – {{ match.awayTeam }}
+          </h2>
+          @switch (match.status) {
+            @case ('upcoming') {
+              <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">Åpen</span>
+            }
+            @case ('locked') {
+              <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Låst</span>
+            }
+            @case ('finished') {
+              <span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">Ferdig</span>
+            }
+          }
+        </div>
+
+        <p class="text-sm text-slate-500">
+          Avspark {{ match.kickoffUtc | date: 'EEEE d. MMMM HH:mm' }}
+        </p>
+
+        @switch (match.status) {
+          @case ('upcoming') {
+            <p class="mt-2 text-sm text-slate-600">
+              {{ match.answeredCount }} av {{ match.questionCount }} spørsmål besvart
+              · Frist {{ match.lockAtUtc | date: 'HH:mm' }}
+            </p>
+            <a [routerLink]="['/kamper', match.id, 'quiz']"
+               class="mt-3 inline-block rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+              {{ match.answeredCount > 0 ? 'Endre svar' : 'Svar på quiz' }}
+            </a>
+          }
+          @case ('locked') {
+            <p class="mt-2 text-sm text-slate-600">Fristen er ute – lykke til!</p>
+            <a [routerLink]="['/kamper', match.id, 'quiz']"
+               class="mt-3 inline-block rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              Se svarene dine
+            </a>
+          }
+          @case ('finished') {
+            <p class="mt-2 text-sm font-medium text-slate-700">
+              Du fikk {{ match.myPoints ?? 0 }} av {{ match.questionCount }} poeng
+            </p>
+            <div class="mt-3 flex gap-2">
+              <a [routerLink]="['/kamper', match.id, 'resultater']"
+                 class="inline-block rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+                Resultater
+              </a>
+              <a [routerLink]="['/kamper', match.id, 'quiz']"
+                 class="inline-block rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                Fasit
+              </a>
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+}
