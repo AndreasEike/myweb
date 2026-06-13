@@ -17,4 +17,24 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
   </ItemGroup>
 
+  <!-- Build the Angular frontend and bundle it into wwwroot on publish -->
+  <PropertyGroup>
+    <FrontendDir>$(MSBuildProjectDirectory)\..\..\frontend</FrontendDir>
+    <FrontendDist>$(FrontendDir)\dist\frontend\browser</FrontendDist>
+  </PropertyGroup>
+
+  <Target Name="BuildFrontend" BeforeTargets="Publish">
+    <Message Importance="high" Text="Installing and building Angular frontend..." />
+    <Exec Command="npm install" WorkingDirectory="$(FrontendDir)" />
+    <Exec Command="npm run build" WorkingDirectory="$(FrontendDir)" />
+  </Target>
+
+  <Target Name="CopyFrontend" AfterTargets="BuildFrontend" BeforeTargets="Publish">
+    <ItemGroup>
+      <FrontendFiles Include="$(FrontendDist)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrontendFiles)"
+          DestinationFiles="@(FrontendFiles->'$(PublishDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
 </Project>

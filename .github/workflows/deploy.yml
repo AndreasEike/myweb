@@ -1,0 +1,49 @@
+name: Build and deploy to Azure Web App
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # lets you trigger a deploy manually from the Actions tab
+
+env:
+  # 👇 REPLACE with your Azure Web App's exact name (Portal → your Web App → Overview → Name)
+  AZURE_WEBAPP_NAME: myweb
+  PUBLISH_DIR: ${{ github.workspace }}/publish
+
+permissions:
+  id-token: write # required for OIDC login to Azure
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # dotnet publish also builds the Angular app and copies it into wwwroot
+      # (see the BuildFrontend/CopyFrontend targets in myweb.api.csproj)
+      - name: Publish
+        run: dotnet publish backend/myweb.api/myweb.api.csproj -c Release -o "${{ env.PUBLISH_DIR }}"
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.PUBLISH_DIR }}
