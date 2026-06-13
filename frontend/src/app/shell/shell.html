@@ -1,0 +1,33 @@
+<div class="min-h-screen bg-slate-100">
+  <header class="bg-emerald-800 text-white shadow">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+      <a routerLink="/kamper" class="text-lg font-bold tracking-tight">⚽ 20 spørsmål</a>
+
+      <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <a routerLink="/kamper" routerLinkActive="underline font-semibold"
+           [routerLinkActiveOptions]="{ exact: true }" class="hover:underline">Kamper</a>
+        <a routerLink="/toppliste" routerLinkActive="underline font-semibold"
+           class="hover:underline">Toppliste</a>
+        @if (auth.isAdmin()) {
+          <span class="hidden text-emerald-300 sm:inline">|</span>
+          <a routerLink="/admin/sporsmalsbank" routerLinkActive="underline font-semibold"
+             class="hover:underline">Spørsmålsbank</a>
+          <a routerLink="/admin/kamper" routerLinkActive="underline font-semibold"
+             class="hover:underline">Kampoppsett</a>
+        }
+      </nav>
+
+      <div class="ml-auto flex items-center gap-3 text-sm">
+        <span class="hidden text-emerald-200 sm:inline">{{ auth.currentUser()?.email }}</span>
+        <button type="button" (click)="auth.logout()"
+                class="rounded bg-emerald-700 px-3 py-1 hover:bg-emerald-600">
+          Logg ut
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-5xl px-4 py-6">
+    <router-outlet />
+  </main>
+</div>
