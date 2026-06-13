@@ -1,0 +1,109 @@
+<a routerLink="/admin/kamper" class="text-sm text-emerald-700 hover:underline">← Tilbake til kampoppsett</a>
+
+<h1 class="mt-2 mb-1 text-2xl font-bold text-slate-800">
+  @if (match(); as m) {
+    Fasit: {{ m.homeTeam }} – {{ m.awayTeam }}
+  } @else {
+    Fasit
+  }
+</h1>
+<p class="mb-4 text-sm text-slate-500">
+  Registrer det riktige svaret for hvert spørsmål basert på hendelsene i kampen.
+  Når du lagrer, rettes alle innsendte svar automatisk.
+</p>
+
+@if (result(); as r) {
+  <p class="mb-4 rounded-lg bg-emerald-100 px-4 py-3 font-medium text-emerald-900">
+    ✓ Fasit lagret! {{ r.scoredAnswers }} svar fra {{ r.participants }} deltaker(e) er rettet automatisk.
+  </p>
+}
+
+<div class="space-y-3">
+  @for (question of questions(); track question.matchQuestionId) {
+    <div class="rounded-xl bg-white p-4 shadow-sm">
+      <p class="mb-2 font-medium text-slate-800">
+        <span class="mr-1 text-slate-400">{{ question.orderIndex }}.</span>{{ question.resolvedText }}
+      </p>
+
+      @switch (question.type) {
+        @case ('yesNo') {
+          <div class="flex gap-2">
+            <button type="button" (click)="setAnswer(question, 'yes')"
+                    class="rounded px-4 py-2 text-sm font-semibold"
+                    [class]="answerOf(question) === 'yes'
+                      ? 'bg-emerald-700 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+              Ja
+            </button>
+            <button type="button" (click)="setAnswer(question, 'no')"
+                    class="rounded px-4 py-2 text-sm font-semibold"
+                    [class]="answerOf(question) === 'no'
+                      ? 'bg-emerald-700 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+              Nei
+            </button>
+          </div>
+        }
+        @case ('teamPick') {
+          <div class="flex flex-wrap gap-2">
+            <button type="button" (click)="setAnswer(question, 'home')"
+                    class="rounded px-4 py-2 text-sm font-semibold"
+                    [class]="answerOf(question) === 'home'
+                      ? 'bg-emerald-700 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+              {{ match()?.homeTeam ?? 'Hjemmelag' }}
+            </button>
+            <button type="button" (click)="setAnswer(question, 'away')"
+                    class="rounded px-4 py-2 text-sm font-semibold"
+                    [class]="answerOf(question) === 'away'
+                      ? 'bg-emerald-700 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'">
+              {{ match()?.awayTeam ?? 'Bortelag' }}
+            </button>
+          </div>
+        }
+        @case ('scoreGuess') {
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-slate-600">{{ match()?.homeTeam ?? 'Hjemme' }}</label>
+            <input type="text" inputmode="numeric" maxlength="2"
+                   [value]="scorePart(question, 0)"
+                   (input)="setScorePart(question, 0, $any($event.target))"
+                   class="w-14 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none" />
+            <span class="font-semibold text-slate-400">–</span>
+            <input type="text" inputmode="numeric" maxlength="2"
+                   [value]="scorePart(question, 1)"
+                   (input)="setScorePart(question, 1, $any($event.target))"
+                   class="w-14 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none" />
+            <label class="text-sm text-slate-600">{{ match()?.awayTeam ?? 'Borte' }}</label>
+          </div>
+        }
+        @case ('number') {
+          <input type="text" inputmode="numeric" maxlength="3"
+                 placeholder="Antall"
+                 [value]="answerOf(question)"
+                 (input)="setNumber(question, $any($event.target))"
+                 class="w-24 rounded border border-slate-300 px-2 py-1.5 text-center focus:border-emerald-600 focus:outline-none" />
+        }
+      }
+    </div>
+  } @empty {
+    <p class="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+      Kampen har ingen spørsmål ennå – velg spørsmål først.
+    </p>
+  }
+</div>
+
+@if (questions().length > 0) {
+  <div class="sticky bottom-0 mt-6 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+    <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+      <span class="text-sm text-slate-600">{{ validCount() }} av {{ questions().length }} fylt ut</span>
+      @if (error(); as message) {
+        <span class="text-sm text-red-700">{{ message }}</span>
+      }
+      <button type="button" (click)="save()" [disabled]="busy()"
+              class="rounded bg-emerald-700 px-6 py-2 font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">
+        {{ busy() ? 'Retter…' : 'Lagre fasit og rett alle svar' }}
+      </button>
+    </div>
+  </div>
+}

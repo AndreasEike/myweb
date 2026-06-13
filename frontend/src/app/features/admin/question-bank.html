@@ -1,0 +1,88 @@
+<h1 class="mb-4 text-2xl font-bold text-slate-800">Spørsmålsbank</h1>
+
+<div class="mb-6 rounded-xl bg-white p-5 shadow-sm">
+  <h2 class="mb-3 font-semibold text-slate-700">
+    {{ editingId() === null ? 'Nytt spørsmål' : 'Rediger spørsmål' }}
+  </h2>
+  <form (ngSubmit)="submit()" class="space-y-3">
+    <div>
+      <label for="text" class="mb-1 block text-sm font-medium text-slate-700">Spørsmålstekst</label>
+      <input id="text" name="text" type="text" [(ngModel)]="text" required
+             class="w-full rounded border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" />
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+      <div>
+        <label for="type" class="mb-1 block text-sm font-medium text-slate-700">Type</label>
+        <select id="type" name="type" [(ngModel)]="type"
+                class="rounded border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none">
+          <option value="yesNo">Ja/Nei</option>
+          <option value="scoreGuess">Resultat (f.eks. 2-1)</option>
+          <option value="teamPick">Lagvalg</option>
+          <option value="number">Antall (heltall, f.eks. 5)</option>
+        </select>
+      </div>
+      <label class="mt-5 flex items-center gap-2 text-sm text-slate-700">
+        <input type="checkbox" name="hasWildcard" [(ngModel)]="hasWildcard" class="h-4 w-4" />
+        Jokerspørsmål – bruk <code class="rounded bg-slate-100 px-1">{{ '{X}' }}</code> der navnet skal stå
+      </label>
+    </div>
+
+    @if (error(); as message) {
+      <p class="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{{ message }}</p>
+    }
+
+    <div class="flex gap-2">
+      <button type="submit"
+              class="rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+        {{ editingId() === null ? 'Legg til' : 'Lagre endringer' }}
+      </button>
+      @if (editingId() !== null) {
+        <button type="button" (click)="cancelEdit()"
+                class="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          Avbryt
+        </button>
+      }
+    </div>
+  </form>
+</div>
+
+<div class="overflow-hidden rounded-xl bg-white shadow-sm">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Spørsmål ({{questions().length}})</th>
+        <th class="px-4 py-3">Type</th>
+        <th class="px-4 py-3 text-right">Brukt i</th>
+        <th class="px-4 py-3 text-right">Handlinger</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (question of questions(); track question.id) {
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-3">
+            {{ question.text }}
+            @if (question.hasWildcard) {
+              <span class="ml-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">Joker</span>
+            }
+          </td>
+          <td class="px-4 py-3 text-slate-600">{{ typeLabels[question.type] }}</td>
+          <td class="px-4 py-3 text-right text-slate-600">{{ question.usageCount }}</td>
+          <td class="px-4 py-3 text-right">
+            <button type="button" (click)="startEdit(question)"
+                    class="mr-2 text-emerald-700 hover:underline">Rediger</button>
+            <button type="button" (click)="remove(question)" [disabled]="question.usageCount > 0"
+                    class="text-red-600 hover:underline disabled:cursor-not-allowed disabled:text-slate-300">
+              Slett
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-slate-500">
+            Banken er tom – legg til det første spørsmålet over.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
