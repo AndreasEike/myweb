@@ -1,0 +1,33 @@
+<div class="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+  <div class="w-full max-w-sm rounded-xl bg-white p-8 shadow">
+    <h1 class="mb-1 text-center text-2xl font-bold text-emerald-800">⚽ 20 spørsmål</h1>
+    <p class="mb-6 text-center text-sm text-slate-500">Logg inn for å delta</p>
+
+    <form (ngSubmit)="submit()" class="space-y-4">
+      <div>
+        <label for="email" class="mb-1 block text-sm font-medium text-slate-700">E-post</label>
+        <input id="email" name="email" type="email" [(ngModel)]="email" required
+               class="w-full rounded border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" />
+      </div>
+      <div>
+        <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Passord</label>
+        <input id="password" name="password" type="password" [(ngModel)]="password" required
+               class="w-full rounded border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" />
+      </div>
+
+      @if (error(); as message) {
+        <p class="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{{ message }}</p>
+      }
+
+      <button type="submit" [disabled]="busy()"
+              class="w-full rounded bg-emerald-700 py-2 font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">
+        {{ busy() ? 'Logger inn…' : 'Logg inn' }}
+      </button>
+    </form>
+
+    <p class="mt-4 text-center text-sm text-slate-600">
+      Ny her?
+      <a routerLink="/registrer" class="font-medium text-emerald-700 hover:underline">Opprett konto</a>
+    </p>
+  </div>
+</div>
