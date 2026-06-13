@@ -1,0 +1,45 @@
+<h1 class="mb-4 text-2xl font-bold text-slate-800">Toppliste</h1>
+
+@if (error(); as message) {
+  <p class="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{{ message }}</p>
+}
+
+@if (entries(); as list) {
+  @if (list.length === 0) {
+    <p class="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+      Ingen poeng er delt ut ennå. Topplisten fylles når den første kampen er ferdig rettet.
+    </p>
+  } @else {
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+          <tr>
+            <th class="px-4 py-3">Plass</th>
+            <th class="px-4 py-3">Navn</th>
+            <th class="px-4 py-3 text-right">Kamper</th>
+            <th class="px-4 py-3 text-right">Poeng</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of list; track entry.name) {
+            <tr class="border-t border-slate-100"
+                [class.bg-emerald-50]="entry.name === myName"
+                [class.font-semibold]="entry.name === myName">
+              <td class="px-4 py-3">
+                @switch (entry.rank) {
+                  @case (1) { 🥇 }
+                  @case (2) { 🥈 }
+                  @case (3) { 🥉 }
+                  @default { {{ entry.rank }} }
+                }
+              </td>
+              <td class="px-4 py-3">{{ entry.name }}@if (entry.name === myName) { <span class="text-emerald-700"> (deg)</span> }</td>
+              <td class="px-4 py-3 text-right">{{ entry.matchesPlayed }}</td>
+              <td class="px-4 py-3 text-right">{{ entry.points }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

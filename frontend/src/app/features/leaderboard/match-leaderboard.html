@@ -1,0 +1,49 @@
+<a routerLink="/kamper" class="text-sm text-emerald-700 hover:underline">← Tilbake til kampene</a>
+
+<h1 class="mt-2 mb-1 text-2xl font-bold text-slate-800">
+  @if (match(); as m) {
+    Resultater: {{ m.homeTeam }} – {{ m.awayTeam }}
+  } @else {
+    Resultater
+  }
+</h1>
+
+@if (error(); as message) {
+  <p class="mt-4 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">{{ message }}</p>
+}
+
+@if (entries(); as list) {
+  @if (list.length === 0) {
+    <p class="mt-4 rounded-lg bg-white p-6 text-slate-600 shadow-sm">Ingen deltok i denne quizen.</p>
+  } @else {
+    <div class="mt-4 overflow-hidden rounded-xl bg-white shadow-sm">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+          <tr>
+            <th class="px-4 py-3">Plass</th>
+            <th class="px-4 py-3">Navn</th>
+            <th class="px-4 py-3 text-right">Poeng</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of list; track entry.name) {
+            <tr class="border-t border-slate-100"
+                [class.bg-emerald-50]="entry.name === myName"
+                [class.font-semibold]="entry.name === myName">
+              <td class="px-4 py-3">
+                @switch (entry.rank) {
+                  @case (1) { 🥇 }
+                  @case (2) { 🥈 }
+                  @case (3) { 🥉 }
+                  @default { {{ entry.rank }} }
+                }
+              </td>
+              <td class="px-4 py-3">{{ entry.name }}@if (entry.name === myName) { <span class="text-emerald-700"> (deg)</span> }</td>
+              <td class="px-4 py-3 text-right">{{ entry.points }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
