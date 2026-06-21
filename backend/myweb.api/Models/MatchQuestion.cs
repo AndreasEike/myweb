@@ -10,5 +10,6 @@ public class MatchQuestion
     public int OrderIndex { get; set; }
     public string? WildcardValue { get; set; }
     public string? CorrectAnswer { get; set; }
+    public bool IsAnnulled { get; set; }
     public List<UserAnswer> Answers { get; set; } = [];
 }
