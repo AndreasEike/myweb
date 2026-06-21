@@ -9,13 +9,19 @@
 </h1>
 <p class="mb-4 text-sm text-slate-500">
   Registrer det riktige svaret for hvert spørsmål basert på hendelsene i kampen.
-  Når du lagrer, rettes alle innsendte svar automatisk.
+  Du kan lagre underveis – resultater publiseres først når alle spørsmål er besvart.
 </p>
 
 @if (result(); as r) {
-  <p class="mb-4 rounded-lg bg-emerald-100 px-4 py-3 font-medium text-emerald-900">
-    ✓ Fasit lagret! {{ r.scoredAnswers }} svar fra {{ r.participants }} deltaker(e) er rettet automatisk.
-  </p>
+  @if (r.published) {
+    <p class="mb-4 rounded-lg bg-emerald-100 px-4 py-3 font-medium text-emerald-900">
+      ✓ Fasit fullført og publisert! {{ r.scoredAnswers }} svar fra {{ r.participants }} deltaker(e) er rettet automatisk.
+    </p>
+  } @else {
+    <p class="mb-4 rounded-lg bg-blue-50 px-4 py-3 font-medium text-blue-900">
+      ✓ {{ r.questionsKeyed }} av {{ questions().length }} svar lagret. Fyll inn resten for å publisere resultater.
+    </p>
+  }
 }
 
 <div class="space-y-3">
@@ -102,7 +108,7 @@
       }
       <button type="button" (click)="save()" [disabled]="busy()"
               class="rounded bg-emerald-700 px-6 py-2 font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">
-        {{ busy() ? 'Retter…' : 'Lagre fasit og rett alle svar' }}
+        {{ busy() ? 'Lagrer…' : 'Lagre fasit' }}
       </button>
     </div>
   </div>
