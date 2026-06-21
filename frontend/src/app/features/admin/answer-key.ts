@@ -19,6 +19,7 @@ export class AnswerKey {
   protected readonly match = signal<AdminMatch | null>(null);
   protected readonly questions = signal<MatchQuestion[]>([]);
   protected readonly answers = signal<Record<number, string>>({});
+  protected readonly annulled = signal<Record<number, boolean>>({});
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<AnswerKeyResult | null>(null);
   protected readonly busy = signal(false);
@@ -35,12 +36,17 @@ export class AnswerKey {
       next: (questions) => {
         this.questions.set(questions);
         const initial: Record<number, string> = {};
+        const initialAnnulled: Record<number, boolean> = {};
         for (const question of questions) {
           if (question.correctAnswer) {
             initial[question.matchQuestionId] = question.correctAnswer;
           }
+          if (question.isAnnulled) {
+            initialAnnulled[question.matchQuestionId] = true;
+          }
         }
         this.answers.set(initial);
+        this.annulled.set(initialAnnulled);
       },
       error: () => this.error.set('Kunne ikke laste kampens spørsmål'),
     });
@@ -52,6 +58,22 @@ export class AnswerKey {
 
   protected setAnswer(question: MatchQuestion, answer: string): void {
     this.answers.update((all) => ({ ...all, [question.matchQuestionId]: answer }));
+    // Choosing a concrete answer clears any annulment on the question.
+    if (this.annulled()[question.matchQuestionId]) {
+      this.annulled.update((all) => ({ ...all, [question.matchQuestionId]: false }));
+    }
+    this.result.set(null);
+  }
+
+  protected isAnnulled(question: MatchQuestion): boolean {
+    return this.annulled()[question.matchQuestionId] ?? false;
+  }
+
+  protected toggleAnnul(question: MatchQuestion): void {
+    this.annulled.update((all) => ({
+      ...all,
+      [question.matchQuestionId]: !all[question.matchQuestionId],
+    }));
     this.result.set(null);
   }
 
@@ -90,8 +112,12 @@ export class AnswerKey {
     const entries = this.questions()
       .filter((q) => this.isValid(q, this.answers()[q.matchQuestionId]))
       .map((q) => ({
-        matchQuestionId: q.matchQuestionId,
-        correctAnswer: this.answers()[q.matchQuestionId],
+        const isAnnulled = this.isAnnulled(q);
+        return {
+          matchQuestionId: q.matchQuestionId,
+          correctAnswer: isAnnulled ? null : this.answers()[q.matchQuestionId],
+          isAnnulled
+        };
       }));
     this.api.setAnswerKey(this.matchId, entries).subscribe({
       next: (result) => {
@@ -106,6 +132,9 @@ export class AnswerKey {
   }
 
   private isValid(question: MatchQuestion, answer: string | undefined): boolean {
+    if (this.isAnnulled(question)) {
+      return true;
+    }
     if (!answer) {
       return false;
     }

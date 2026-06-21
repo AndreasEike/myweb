@@ -9,4 +9,5 @@ public class QuizQuestionResponse
     public string? MyAnswer { get; set; }
     public string? CorrectAnswer { get; set; }
     public bool? IsCorrect { get; set; }
+    public bool IsAnnulled { get; set; }
 }

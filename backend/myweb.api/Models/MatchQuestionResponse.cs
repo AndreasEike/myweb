@@ -11,4 +11,5 @@ public class MatchQuestionResponse
     public bool HasWildcard { get; set; }
     public string? WildcardValue { get; set; }
     public string? CorrectAnswer { get; set; }
+    public bool IsAnnulled { get; set; }
 }

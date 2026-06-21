@@ -96,7 +96,7 @@ public class MatchAdminService(AppDbContext db)
         {
             return Result<List<MatchQuestionResponse>>.Fail("Kampen finnes ikke", 404);
         }
-        if (match.Questions.Any(q => q.CorrectAnswer != null))
+        if (match.Questions.Any(q => q.CorrectAnswer != null || q.IsAnnulled))
         {
             return Result<List<MatchQuestionResponse>>.Fail(
                 "Fasit er registrert for kampen – spørsmålene kan ikke endres", 409);
@@ -225,12 +225,20 @@ public class MatchAdminService(AppDbContext db)
                 return Result<AnswerKeyResponse>.Fail("Samme spørsmål er angitt flere ganger");
             }
 
+            if (entry.IsAnnulled)
+            {
+                matchQuestion.IsAnnulled = true;
+                matchQuestion.CorrectAnswer = null;
+                continue;
+            }
+
             var normalized = AnswerFormats.Normalize(matchQuestion.Question.Type, entry.CorrectAnswer);
             if (normalized == null)
             {
                 return Result<AnswerKeyResponse>.Fail(
                     $"Ugyldig svar for spørsmål {matchQuestion.OrderIndex}");
             }
+            matchQuestion.IsAnnulled = false;
             matchQuestion.CorrectAnswer = normalized;
         }
 
@@ -290,7 +298,8 @@ public class MatchAdminService(AppDbContext db)
         AwayTeam = match.AwayTeam,
         KickoffUtc = match.KickoffUtc,
         QuestionCount = match.Questions.Count,
-        HasAnswerKey = match.Questions.Count > 0 && match.Questions.All(q => q.CorrectAnswer != null),
+        HasAnswerKey = match.Questions.Count > 0
+            && match.Questions.All(q => q.CorrectAnswer != null || q.IsAnnulled),
         IsLocked = match.IsLocked
     };
 
@@ -314,7 +323,8 @@ public class MatchAdminService(AppDbContext db)
             Type = mq.Question.Type,
             HasWildcard = mq.Question.HasWildcard,
             WildcardValue = mq.WildcardValue,
-            CorrectAnswer = mq.CorrectAnswer
+            CorrectAnswer = mq.CorrectAnswer,
+            IsAnnulled = mq.IsAnnulled
         }).ToList();
     }
 }

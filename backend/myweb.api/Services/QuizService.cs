@@ -29,7 +29,7 @@ public class QuizService(AppDbContext db)
         return visible.Select(m =>
         {
             var answered = myAnswers.Where(a => a.MatchId == m.Id).ToList();
-            var hasKey = m.Questions.All(q => q.CorrectAnswer != null);
+            var hasKey = m.Questions.All(q => q.CorrectAnswer != null || q.IsAnnulled);
             return new MatchListItemResponse
             {
                 Id = m.Id,
@@ -61,7 +61,7 @@ public class QuizService(AppDbContext db)
             .Where(ua => ua.UserId == userId && matchQuestionIds.Contains(ua.MatchQuestionId))
             .ToDictionaryAsync(ua => ua.MatchQuestionId);
 
-        var hasKey = match.Questions.All(q => q.CorrectAnswer != null);
+        var hasKey = match.Questions.All(q => q.CorrectAnswer != null || q.IsAnnulled);
         var questions = match.Questions
             .OrderBy(mq => mq.OrderIndex)
             .Select(mq =>
@@ -77,7 +77,8 @@ public class QuizService(AppDbContext db)
                     Type = mq.Question.Type,
                     MyAnswer = mine?.Answer,
                     CorrectAnswer = hasKey ? mq.CorrectAnswer : null,
-                    IsCorrect = hasKey ? mine?.IsCorrect : null
+                    IsCorrect = hasKey ? mine?.IsCorrect : null,
+                    IsAnnulled = hasKey && mq.IsAnnulled
                 };
             })
             .ToList();
@@ -167,7 +168,7 @@ public class QuizService(AppDbContext db)
         {
             return Result<List<LeaderboardEntryResponse>>.Fail("Kampen finnes ikke", 404);
         }
-        if (!match.Questions.All(q => q.CorrectAnswer != null))
+        if (!match.Questions.All(q => q.CorrectAnswer != null || q.IsAnnulled))
         {
             return Result<List<LeaderboardEntryResponse>>.Fail(
                 "Resultatene er ikke klare ennå", 409);

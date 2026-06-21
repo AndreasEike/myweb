@@ -65,11 +65,13 @@ export interface MatchQuestion {
   hasWildcard: boolean;
   wildcardValue?: string | null;
   correctAnswer?: string | null;
+  isAnnulled: boolean;
 }
 
 export interface AnswerKeyEntry {
   matchQuestionId: number;
-  correctAnswer: string;
+  correctAnswer: string | null;
+  isAnnulled: boolean;
 }
 
 export interface AnswerKeyResult {
@@ -99,6 +101,7 @@ export interface QuizQuestion {
   myAnswer?: string | null;
   correctAnswer?: string | null;
   isCorrect?: boolean | null;
+  isAnnulled: boolean;
 }
 
 export interface Quiz {
