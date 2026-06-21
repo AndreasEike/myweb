@@ -76,6 +76,7 @@ export interface AnswerKeyResult {
   questionsKeyed: number;
   scoredAnswers: number;
   participants: number;
+  published: boolean;
 }
 
 export interface MatchListItem {

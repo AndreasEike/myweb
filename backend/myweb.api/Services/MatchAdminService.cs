@@ -234,26 +234,32 @@ public class MatchAdminService(AppDbContext db)
             matchQuestion.CorrectAnswer = normalized;
         }
 
-        if (seen.Count != matchQuestions.Count)
+        var allAnswered = matchQuestions.All(mq => mq.CorrectAnswer != null);
+        int scoredAnswers = 0;
+        int participants = 0;
+
+        if (allAnswered)
         {
-            return Result<AnswerKeyResponse>.Fail("Fasit må fylles ut for alle spørsmålene");
+            var answers = await db.UserAnswers
+                .Include(ua => ua.MatchQuestion)
+                .Where(ua => ua.MatchQuestion.MatchId == matchId)
+                .ToListAsync();
+            foreach (var answer in answers)
+            {
+                answer.IsCorrect = answer.Answer == answer.MatchQuestion.CorrectAnswer;
+            }
+            scoredAnswers = answers.Count;
+            participants = answers.Select(a => a.UserId).Distinct().Count();
         }
 
-        var answers = await db.UserAnswers
-            .Include(ua => ua.MatchQuestion)
-            .Where(ua => ua.MatchQuestion.MatchId == matchId)
-            .ToListAsync();
-        foreach (var answer in answers)
-        {
-            answer.IsCorrect = answer.Answer == answer.MatchQuestion.CorrectAnswer;
-        }
         await db.SaveChangesAsync();
 
         return Result<AnswerKeyResponse>.Success(new AnswerKeyResponse
         {
-            QuestionsKeyed = matchQuestions.Count,
-            ScoredAnswers = answers.Count,
-            Participants = answers.Select(a => a.UserId).Distinct().Count()
+            QuestionsKeyed = seen.Count,
+            ScoredAnswers = scoredAnswers,
+            Participants = participants,
+            Published = allAnswered
         });
     }
 

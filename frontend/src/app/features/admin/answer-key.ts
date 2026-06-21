@@ -80,17 +80,19 @@ export class AnswerKey {
     if (this.busy()) {
       return;
     }
-    if (this.validCount() !== this.questions().length) {
-      this.error.set('Fasit må fylles ut for alle spørsmålene');
+    if (this.validCount() === 0) {
+      this.error.set('Fyll inn minst ett svar før du lagrer');
       return;
     }
 
     this.error.set(null);
     this.busy.set(true);
-    const entries = this.questions().map((q) => ({
-      matchQuestionId: q.matchQuestionId,
-      correctAnswer: this.answers()[q.matchQuestionId],
-    }));
+    const entries = this.questions()
+      .filter((q) => this.isValid(q, this.answers()[q.matchQuestionId]))
+      .map((q) => ({
+        matchQuestionId: q.matchQuestionId,
+        correctAnswer: this.answers()[q.matchQuestionId],
+      }));
     this.api.setAnswerKey(this.matchId, entries).subscribe({
       next: (result) => {
         this.busy.set(false);
