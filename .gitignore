@@ -54,3 +54,7 @@ obj/
 .claude/
 MEMORY.md
 /frontend/.vs
+/backend/myweb.api/test-flow.ps1
+/backend/myweb.api/myweb.api.http
+/backend/myweb.api/migrate-to-azure.ps1
+/backend/myweb.api/appsettings.Development.json
