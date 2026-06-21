@@ -111,14 +111,14 @@ export class AnswerKey {
     this.busy.set(true);
     const entries = this.questions()
       .filter((q) => this.isValid(q, this.answers()[q.matchQuestionId]))
-      .map((q) => ({
+      .map((q) => {
         const isAnnulled = this.isAnnulled(q);
         return {
           matchQuestionId: q.matchQuestionId,
-          correctAnswer: isAnnulled ? null : this.answers()[q.matchQuestionId],
-          isAnnulled
+          correctAnswer: isAnnulled ? null : (this.answers()[q.matchQuestionId] ?? null),
+          isAnnulled,
         };
-      }));
+      });
     this.api.setAnswerKey(this.matchId, entries).subscribe({
       next: (result) => {
         this.busy.set(false);
