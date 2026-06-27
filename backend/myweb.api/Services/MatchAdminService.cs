@@ -242,7 +242,7 @@ public class MatchAdminService(AppDbContext db)
             matchQuestion.CorrectAnswer = normalized;
         }
 
-        var allAnswered = matchQuestions.All(mq => mq.CorrectAnswer != null);
+        var allAnswered = matchQuestions.All(mq => mq.CorrectAnswer != null || mq.IsAnnulled);
         int scoredAnswers = 0;
         int participants = 0;
 
