@@ -77,6 +77,10 @@
            [class.opacity-40]="match.questionCount === 0">
           {{ match.hasAnswerKey ? 'Endre fasit' : 'Registrer fasit' }}
         </a>
+        <a [routerLink]="['/admin/kamper', match.id, 'deltakere']"
+           class="rounded border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          Deltakere
+        </a>
         <button type="button" (click)="remove(match)"
                 class="rounded border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">
           Slett

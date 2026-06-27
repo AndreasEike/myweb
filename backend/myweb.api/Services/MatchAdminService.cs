@@ -84,6 +84,43 @@ public class MatchAdminService(AppDbContext db)
     }
 
     /// <summary>
+    /// Lists the users who have posted at least one answer for the match, with how
+    /// many questions each has answered and when they last saved.
+    /// </summary>
+    public async Task<Result<List<MatchParticipantResponse>>> GetParticipantsAsync(int matchId)
+    {
+        var exists = await db.Matches.AnyAsync(m => m.Id == matchId);
+        if (!exists)
+        {
+            return Result<List<MatchParticipantResponse>>.Fail("Kampen finnes ikke", 404);
+        }
+
+        var rows = await db.UserAnswers
+            .Where(ua => ua.MatchQuestion.MatchId == matchId)
+            .GroupBy(ua => new { ua.UserId, ua.User.Email })
+            .Select(g => new
+            {
+                g.Key.Email,
+                AnsweredCount = g.Count(),
+                LastUpdatedUtc = g.Max(ua => ua.UpdatedAtUtc)
+            })
+            .ToListAsync();
+
+        var participants = rows
+            .Select(r => new MatchParticipantResponse
+            {
+                Name = r.Email.Split('@')[0],
+                Email = r.Email,
+                AnsweredCount = r.AnsweredCount,
+                LastUpdatedUtc = r.LastUpdatedUtc
+            })
+            .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return Result<List<MatchParticipantResponse>>.Success(participants);
+    }
+
+    /// <summary>
     /// Replaces the match's question list. Existing assignments are matched on
     /// (QuestionId, WildcardValue) so user answers survive reordering and partial edits.
     /// </summary>

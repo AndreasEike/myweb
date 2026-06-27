@@ -55,6 +55,11 @@ export const routes: Routes = [
             path: 'kamper/:id/fasit',
             loadComponent: () => import('./features/admin/answer-key').then((m) => m.AnswerKey),
           },
+          {
+            path: 'kamper/:id/deltakere',
+            loadComponent: () =>
+              import('./features/admin/match-participants').then((m) => m.MatchParticipants),
+          },
         ],
       },
     ],
