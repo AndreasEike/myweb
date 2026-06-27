@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -14,7 +15,7 @@ interface SelectedQuestion {
 
 @Component({
   selector: 'app-match-setup',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, DatePipe],
   templateUrl: './match-setup.html',
 })
 export class MatchSetup {
@@ -29,6 +30,11 @@ export class MatchSetup {
   protected readonly saved = signal(false);
   protected readonly busy = signal(false);
 
+  /** Other matches that already have questions, newest first – sources to copy from. */
+  protected readonly copySources = signal<AdminMatch[]>([]);
+  protected copyFromId = '';
+  protected readonly copying = signal(false);
+
   protected readonly typeLabels: Record<QuestionType, string> = {
     yesNo: 'Ja/Nei',
     scoreGuess: 'Resultat',
@@ -42,7 +48,14 @@ export class MatchSetup {
 
   constructor() {
     this.api.getMatches().subscribe({
-      next: (matches) => this.match.set(matches.find((m) => m.id === this.matchId) ?? null),
+      next: (matches) => {
+        this.match.set(matches.find((m) => m.id === this.matchId) ?? null);
+        const sources = matches
+          .filter((m) => m.id !== this.matchId && m.questionCount > 0)
+          .sort((a, b) => b.kickoffUtc.localeCompare(a.kickoffUtc));
+        this.copySources.set(sources);
+        this.copyFromId = sources[0] ? String(sources[0].id) : '';
+      },
     });
     this.api.getQuestions().subscribe({
       next: (questions) => this.bank.set(questions),
@@ -60,6 +73,40 @@ export class MatchSetup {
           })),
         ),
       error: () => this.error.set('Kunne ikke laste kampens spørsmål'),
+    });
+  }
+
+  protected copyFrom(): void {
+    const sourceId = Number(this.copyFromId);
+    if (!sourceId || this.copying() || this.match()?.hasAnswerKey) {
+      return;
+    }
+    if (this.selected().length > 0 && !confirm('Erstatte de valgte spørsmålene med kopien?')) {
+      return;
+    }
+
+    this.error.set(null);
+    this.copying.set(true);
+    this.api.getMatchQuestions(sourceId).subscribe({
+      next: (questions) => {
+        this.selected.set(
+          questions
+            .slice(0, 20)
+            .map((mq) => ({
+              questionId: mq.questionId,
+              text: mq.text,
+              type: mq.type,
+              hasWildcard: mq.hasWildcard,
+              wildcardValue: mq.wildcardValue ?? '',
+            })),
+        );
+        this.copying.set(false);
+        this.saved.set(false);
+      },
+      error: () => {
+        this.copying.set(false);
+        this.error.set('Kunne ikke kopiere spørsmålene');
+      },
     });
   }
 

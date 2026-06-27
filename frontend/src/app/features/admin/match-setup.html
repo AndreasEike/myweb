@@ -17,6 +17,31 @@
   </p>
 }
 
+@if (!match()?.hasAnswerKey && copySources().length > 0) {
+  <div class="mb-4 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-sm">
+    <div>
+      <label for="copyFrom" class="mb-1 block text-sm font-medium text-slate-700">
+        Kopier spørsmål fra tidligere kamp
+      </label>
+      <select id="copyFrom" name="copyFrom" [(ngModel)]="copyFromId"
+              class="rounded border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none">
+        @for (source of copySources(); track source.id) {
+          <option [value]="source.id">
+            {{ source.homeTeam }} – {{ source.awayTeam }} ({{ source.kickoffUtc | date: 'd. MMM y' }})
+          </option>
+        }
+      </select>
+    </div>
+    <button type="button" (click)="copyFrom()" [disabled]="copying()"
+            class="rounded border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+      {{ copying() ? 'Kopierer…' : 'Kopier spørsmål' }}
+    </button>
+    <p class="text-xs text-slate-500">
+      Fyller listen med spørsmålene fra kampen – juster fritt før du lagrer.
+    </p>
+  </div>
+}
+
 <div class="grid gap-6 lg:grid-cols-2">
   <!-- Valgte spørsmål -->
   <div>
