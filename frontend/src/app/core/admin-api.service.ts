@@ -6,6 +6,7 @@ import {
   AnswerKeyEntry,
   AnswerKeyResult,
   AssignmentEntry,
+  MatchParticipant,
   MatchQuestion,
   MatchRequest,
   QuestionBankItem,
@@ -58,5 +59,9 @@ export class AdminApiService {
 
   setAnswerKey(matchId: number, entries: AnswerKeyEntry[]): Observable<AnswerKeyResult> {
     return this.http.put<AnswerKeyResult>(`/api/admin/matches/${matchId}/answer-key`, entries);
+  }
+
+  getMatchParticipants(matchId: number): Observable<MatchParticipant[]> {
+    return this.http.get<MatchParticipant[]>(`/api/admin/matches/${matchId}/participants`);
   }
 }

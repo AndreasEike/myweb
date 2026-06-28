@@ -36,6 +36,9 @@ public static class AdminEndpoints
         group.MapGet("/matches/{id:int}/questions", async (int id, MatchAdminService matches) =>
             (await matches.GetMatchQuestionsAsync(id)).ToHttp());
 
+        group.MapGet("/matches/{id:int}/participants", async (int id, MatchAdminService matches) =>
+            (await matches.GetParticipantsAsync(id)).ToHttp());
+
         group.MapPut("/matches/{id:int}/questions", async (int id, List<AssignmentEntry> entries, MatchAdminService matches) =>
             (await matches.SetMatchQuestionsAsync(id, entries)).ToHttp());
 

@@ -81,6 +81,13 @@ export interface AnswerKeyResult {
   published: boolean;
 }
 
+export interface MatchParticipant {
+  name: string;
+  email: string;
+  answeredCount: number;
+  lastUpdatedUtc: string;
+}
+
 export interface MatchListItem {
   id: number;
   homeTeam: string;
